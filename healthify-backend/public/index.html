@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Healthify · Backend UI Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 1.5rem; background: #f7fafc; }
+    .shell { max-width: 960px; margin: 0 auto; }
+    header { margin-bottom: 1.5rem; }
+    h1 { margin: 0 0 0.25rem; }
+    p { font-size: 0.95rem; color: #4a5568; }
+    h2 { margin: 0 0 0.75rem; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; }
+    ul { padding-left: 1.2rem; margin: 0.25rem 0 0; font-size: 0.95rem; color: #4a5568; }
+    a { color: #2b6cb0; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>Healthify · Backend UI</h1>
+      <p>This page is your starting point. Use these links instead of typing any <code>/api/...</code> URLs.</p>
+    </header>
+
+    <section>
+      <h2>User Area</h2>
+      <p>Pages intended for normal users of the app.</p>
+      <ul>
+        <li><a href="/user-home.html">User Home (categories, exercises, workouts, current workout)</a></li>
+        <li><a href="/user-signup.html">User Signup</a></li>
+        <li><a href="/user-login.html">User Login</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Admin Area</h2>
+      <p>Pages intended for admins only. These use the admin JWT token for managing data.</p>
+      <ul>
+        <li><a href="/admin-index.html">Admin Home</a></li>
+        <li><a href="/admin-login.html">Admin Login</a></li>
+        <li><a href="/admin-categories.html">Categories Admin</a></li>
+        <li><a href="/admin-exercises.html">Exercises Admin</a></li>
+        <li><a href="/admin-workouts.html">Workouts Admin</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Health & Debug</h2>
+      <p>Quick checks exposed via the UI; no need to call APIs manually.</p>
+      <ul>
+        <li>Health status is shown on: <code>admin-categories</code>, <code>admin-exercises</code>, <code>admin-workouts</code>, and <code>user-home</code> pages.</li>
+        <li>All other functionality (CRUD for categories, exercises, workouts) is triggered from the above pages.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>

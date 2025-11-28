@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #28a745; /* Healthify Green */
+    --color-secondary: #007bff; /* Blue */
+    --color-danger: #dc3545; /* Red */
+    --color-background: #f4f4f9;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-background);
+}

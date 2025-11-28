@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Healthify Admin · Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 1.5rem; background: #f7fafc; }
+    .shell { max-width: 960px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    nav a { margin-right: 0.75rem; color: #2b6cb0; text-decoration: none; font-size: 0.9rem; }
+    nav a:last-child { margin-right: 0; }
+    h1 { margin: 0; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; max-width: 400px; }
+    label { display: block; font-size: 0.85rem; margin-bottom: 0.25rem; color: #4a5568; }
+    input[type="email"], input[type="password"] { width: 100%; box-sizing: border-box; padding: 0.4rem 0.5rem; border-radius: 4px; border: 1px solid #cbd5e0; font-size: 0.9rem; }
+    button { cursor: pointer; border-radius: 4px; border: 1px solid #4c51bf; background: #4c51bf; color: #fff; padding: 0.35rem 0.75rem; font-size: 0.9rem; }
+    .messages { font-size: 0.85rem; margin-top: 0.5rem; }
+    .messages .error { color: #e53e3e; }
+    .messages .ok { color: #38a169; }
+    a { color: #3182ce; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>Healthify · Admin</h1>
+      <nav>
+        <a href="/admin-index.html">Home</a>
+        <a href="/admin-login.html">Login</a>
+        <a href="/admin-categories.html">Categories</a>
+        <a href="/admin-exercises.html">Exercises</a>
+        <a href="/admin-workouts.html">Workouts</a>
+      </nav>
+    </header>
+
+    <section>
+    <form id="loginForm" method="post" action="/api/auth/login">
+      <div style="margin-bottom: 0.5rem;">
+        <label for="emailInput">Email</label>
+        <input id="emailInput" name="email" type="email" required placeholder="tester@healthify.com" />
+      </div>
+      <div style="margin-bottom: 0.5rem;">
+        <label for="passwordInput">Password</label>
+        <input id="passwordInput" name="password" type="password" required placeholder="pass1234" />
+      </div>
+      <button id="btnLogin" type="submit">Login</button>
+    </form>
+    <div id="loginMessages" class="messages"></div>
+    <p style="font-size: 0.85rem; margin-top: 0.75rem;">
+      After successful login your JWT is stored in <code>localStorage.token</code> and you can open
+      <a href="/admin-categories.html">Categories Admin</a>.
+    </p>
+  </section>
+  </div>
+
+  <script src="/js/admin-login.js"></script>
+</body>
+</html>
