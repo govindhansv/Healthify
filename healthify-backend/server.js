@@ -26,6 +26,7 @@ const allowedOrigins = [
   'http://localhost:3000', // admin UI
   'http://localhost:3001', // possible user UI dev port
   'http://localhost:3002', // alternative user UI dev port
+  'https://healthify-admin-pearl.vercel.app',
 ];
 
 app.use(cors({
