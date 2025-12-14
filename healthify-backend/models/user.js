@@ -22,6 +22,27 @@ const userSchema = new mongoose.Schema({
   // Water tracking settings
   waterGoal: { type: Number, default: 8, min: 1, max: 20 }, // daily goal in glasses
 
+  // Health Metrics
+  healthMetrics: {
+    cholesterol: {
+      value: { type: String, default: '' },
+      unit: { type: String, default: 'mg/dL' },
+      updatedAt: { type: Date }
+    },
+    bloodSugar: {
+      value: { type: String, default: '' },
+      unit: { type: String, default: 'mg/dL' },
+      type: { type: String, enum: ['fasting', 'postprandial', 'random'], default: 'fasting' },
+      updatedAt: { type: Date }
+    },
+    bloodPressure: {
+      value: { type: String, default: '' }, // e.g. "120/80"
+      systolic: { type: Number },
+      diastolic: { type: Number },
+      updatedAt: { type: Date }
+    }
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

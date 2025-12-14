@@ -29,6 +29,11 @@ router.get('/', protect, async (req, res) => {
                 profileImage: user.profileImage || '',
                 profileCompleted: user.profileCompleted || false,
                 role: user.role,
+                healthMetrics: user.healthMetrics || {
+                    cholesterol: { value: '', unit: 'mg/dL' },
+                    bloodSugar: { value: '', unit: 'mg/dL', type: 'fasting' },
+                    bloodPressure: { value: '', systolic: null, diastolic: null }
+                },
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             }

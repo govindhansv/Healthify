@@ -20,6 +20,7 @@ const waterRoutes = require('./routes/water');
 const userMedicinesRoutes = require('./routes/userMedicines');
 const exerciseBundlesRoutes = require('./routes/exerciseBundles');
 const workoutProgressRoutes = require('./routes/workoutProgress');
+const healthMetricsRoutes = require('./routes/healthMetrics');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/water', waterRoutes);
 app.use('/api/user-medicines', userMedicinesRoutes);
 app.use('/api/exercise-bundles', exerciseBundlesRoutes);
 app.use('/api/workout-progress', workoutProgressRoutes);
+app.use('/api/health-metrics', healthMetricsRoutes);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 4000;
