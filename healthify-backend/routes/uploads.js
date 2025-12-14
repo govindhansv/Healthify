@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/uploads/image
 // field name: file
-router.post('/image', protect, isAdmin, upload.single('file'), async (req, res) => {
+router.post('/image', protect, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });

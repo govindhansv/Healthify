@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, enum: ["male", "female", "other", ""], default: "" },
   weight: { type: Number, min: 1 }, // in kg
   height: { type: Number, min: 1 }, // in cm (optional, for future use)
+  info: { type: String, default: "" }, // user bio/info
+  fitnessGoal: { type: String, default: "" }, // e.g. "Lose Weight", "Gain Muscle"
   profileImage: { type: String, default: "" }, // profile picture URL
 
   // Profile completion status
@@ -21,6 +23,10 @@ const userSchema = new mongoose.Schema({
 
   // Water tracking settings
   waterGoal: { type: Number, default: 8, min: 1, max: 20 }, // daily goal in glasses
+  currentWater: {
+    date: { type: String, default: '' }, // YYYY-MM-DD
+    count: { type: Number, default: 0 }
+  },
 
   // Health Metrics
   healthMetrics: {

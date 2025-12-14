@@ -144,17 +144,23 @@ router.get('/today', protect, async (req, res) => {
  */
 router.post('/drink', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('waterGoal');
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         const log = await getOrCreateTodayLog(req.user.id, user.waterGoal);
 
-        // Increment count (allow going over goal)
         log.count += 1;
         log.updatedAt = new Date();
         await log.save();
+
+        // Sync to User model (Fire and Forget)
+        user.currentWater = {
+            date: log.date,
+            count: log.count
+        };
+        user.save().catch(e => console.error('BG Sync failed:', e));
 
         const percentage = log.goal > 0 ? Math.min(Math.round((log.count / log.goal) * 100), 100) : 0;
 
@@ -183,17 +189,23 @@ router.post('/drink', protect, async (req, res) => {
  */
 router.delete('/drink', protect, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('waterGoal');
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         const log = await getOrCreateTodayLog(req.user.id, user.waterGoal);
 
-        // Decrement count (minimum 0)
         log.count = Math.max(log.count - 1, 0);
         log.updatedAt = new Date();
         await log.save();
+
+        // Sync to User model (Fire and Forget)
+        user.currentWater = {
+            date: log.date,
+            count: log.count
+        };
+        user.save().catch(e => console.error('BG Sync failed:', e));
 
         const percentage = log.goal > 0 ? Math.min(Math.round((log.count / log.goal) * 100), 100) : 0;
 
@@ -232,7 +244,7 @@ router.put('/today', protect, async (req, res) => {
             });
         }
 
-        const user = await User.findById(req.user.id).select('waterGoal');
+        const user = await User.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
@@ -242,6 +254,13 @@ router.put('/today', protect, async (req, res) => {
         log.count = Math.round(count);
         log.updatedAt = new Date();
         await log.save();
+
+        // Sync to User model (Fire and Forget)
+        user.currentWater = {
+            date: log.date,
+            count: log.count
+        };
+        user.save().catch(e => console.error('BG Sync failed:', e));
 
         const percentage = log.goal > 0 ? Math.min(Math.round((log.count / log.goal) * 100), 100) : 0;
 

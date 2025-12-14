@@ -26,6 +26,7 @@ router.get('/', protect, async (req, res) => {
                 gender: user.gender || '',
                 weight: user.weight || null,
                 height: user.height || null,
+                fitnessGoal: user.fitnessGoal || '',
                 profileImage: user.profileImage || '',
                 profileCompleted: user.profileCompleted || false,
                 role: user.role,
@@ -34,6 +35,7 @@ router.get('/', protect, async (req, res) => {
                     bloodSugar: { value: '', unit: 'mg/dL', type: 'fasting' },
                     bloodPressure: { value: '', systolic: null, diastolic: null }
                 },
+                currentWater: user.currentWater || { date: '', count: 0 },
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             }
@@ -52,7 +54,7 @@ router.get('/', protect, async (req, res) => {
  */
 router.post('/complete', protect, async (req, res) => {
     try {
-        const { name, age, gender, weight, height } = req.body || {};
+        const { name, age, gender, weight, height, fitnessGoal } = req.body || {};
 
         // Validation
         if (!name || !name.trim()) {
@@ -79,6 +81,7 @@ router.post('/complete', protect, async (req, res) => {
         user.gender = gender.toLowerCase();
         user.weight = Number(weight);
         if (height) user.height = Number(height);
+        if (fitnessGoal) user.fitnessGoal = fitnessGoal;
         user.profileCompleted = true;
         user.updatedAt = new Date();
 
@@ -114,7 +117,7 @@ router.post('/complete', protect, async (req, res) => {
  */
 router.put('/', protect, async (req, res) => {
     try {
-        const { name, age, gender, weight, height, profileImage } = req.body || {};
+        const { name, age, gender, weight, height, fitnessGoal, profileImage } = req.body || {};
 
         const user = await User.findById(req.user.id);
         if (!user) {
@@ -164,6 +167,10 @@ router.put('/', protect, async (req, res) => {
             user.profileImage = profileImage;
         }
 
+        if (fitnessGoal !== undefined) {
+            user.fitnessGoal = fitnessGoal;
+        }
+
         user.updatedAt = new Date();
         await user.save();
 
@@ -178,6 +185,7 @@ router.put('/', protect, async (req, res) => {
                 gender: user.gender,
                 weight: user.weight,
                 height: user.height || null,
+                fitnessGoal: user.fitnessGoal || '',
                 profileImage: user.profileImage || '',
                 profileCompleted: user.profileCompleted,
                 role: user.role,
