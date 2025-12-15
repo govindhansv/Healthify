@@ -11,6 +11,7 @@ const exerciseSchema = new mongoose.Schema({
   duration: { type: Number, default: 0 },  // Duration in seconds for timed exercises
   equipment: { type: [String], default: [] },
   image: { type: String, default: '' },
+  gif: { type: String, default: '' },  // GIF URL for animated demonstration
   video: { type: String, default: '' },  // Video URL for demonstration
   createdAt: { type: Date, default: Date.now }
 });

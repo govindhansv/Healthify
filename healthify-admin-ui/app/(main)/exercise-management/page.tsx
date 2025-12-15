@@ -1,5 +1,5 @@
 'use client';
- 
+
 import { useState, useEffect, useCallback } from 'react';
 import { CrudLayout } from '@/components/CrudLayout';
 import { apiFetch } from '@/lib/api';
@@ -26,6 +26,7 @@ interface Exercise {
     duration: number;
     equipment: string[];
     image?: string;
+    gif?: string;
     createdAt: string;
     category?: ExerciseCategoryRef | null;
 }
@@ -45,11 +46,13 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, initialData, cat
         duration: initialData ? String(initialData.duration ?? '') : '',
         equipment: initialData?.equipment?.join(', ') || '',
         image: initialData?.image || '',
+        gif: initialData?.gif || '',
         category: initialData?.category?._id || '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [uploadingGif, setUploadingGif] = useState(false);
 
     const isEdit = !!initialData;
 
@@ -74,6 +77,22 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, initialData, cat
         }
     };
 
+    const handleGifFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingGif(true);
+        setError('');
+        try {
+            const result = await uploadImage(file);
+            setFormData(prev => ({ ...prev, gif: result.url }));
+        } catch (err: any) {
+            setError(err.message || 'GIF upload failed');
+        } finally {
+            setUploadingGif(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -89,6 +108,7 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, initialData, cat
                 difficulty: formData.difficulty as Exercise['difficulty'],
                 duration: formData.duration ? Number(formData.duration) : undefined,
                 image: formData.image || undefined,
+                gif: formData.gif || undefined,
                 category: formData.category || undefined,
                 equipment: formData.equipment
                     .split(',')
@@ -214,6 +234,37 @@ const ExerciseForm: React.FC<ExerciseFormProps> = ({ onSuccess, initialData, cat
                             </span>
                         )}
                     </div>
+                </label>
+
+                <label className="block">
+                    <span className="text-gray-700">GIF URL (for animated demonstration)</span>
+                    <input
+                        type="url"
+                        name="gif"
+                        value={formData.gif}
+                        onChange={handleChange}
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2"
+                        placeholder="https://example.com/exercise.gif"
+                    />
+                    <div className="mt-2 flex items-center gap-3 text-sm">
+                        <input
+                            type="file"
+                            accept="image/gif"
+                            onChange={handleGifFileChange}
+                            disabled={uploadingGif}
+                            className="text-sm"
+                        />
+                        {uploadingGif && (
+                            <span className="text-gray-500 flex items-center">
+                                <FaSpinner className="animate-spin inline mr-1" /> Uploading GIF...
+                            </span>
+                        )}
+                    </div>
+                    {formData.gif && (
+                        <div className="mt-2">
+                            <img src={formData.gif} alt="GIF Preview" className="w-24 h-24 object-cover rounded" />
+                        </div>
+                    )}
                 </label>
             </div>
 
