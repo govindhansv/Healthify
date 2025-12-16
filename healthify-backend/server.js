@@ -21,6 +21,7 @@ const userMedicinesRoutes = require('./routes/userMedicines');
 const exerciseBundlesRoutes = require('./routes/exerciseBundles');
 const workoutProgressRoutes = require('./routes/workoutProgress');
 const healthMetricsRoutes = require('./routes/healthMetrics');
+const migrationRoutes = require('./routes/migration');
 
 const app = express();
 
@@ -31,7 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   'http://localhost:3000', // admin UI
   'http://localhost:3001', // possible user UI dev port
-  'http://localhost:3002', // alternative user UI dev port
+  'http://localhost:3002', // alternative user UI dev port / old admin
+  'http://localhost:3003', // old admin panel (if running on different port)
   'https://healthify-admin-pearl.vercel.app',
 ];
 
@@ -67,6 +69,7 @@ app.use('/api/exercise-bundles', exerciseBundlesRoutes);
 app.use('/api/workout-progress', workoutProgressRoutes);
 app.use('/api/health-metrics', healthMetricsRoutes);
 app.use('/api/health-assessment', require('./routes/healthAssessment'));
+app.use('/api/migration', migrationRoutes);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 4000;

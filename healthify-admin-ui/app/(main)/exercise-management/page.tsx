@@ -399,6 +399,14 @@ export default function ExerciseManagementPage() {
         setPage(1);
     };
 
+    const formatDuration = (seconds: number) => {
+        if (!seconds || seconds === 0) return '-';
+        if (seconds < 60) return `${seconds}s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    };
+
     const tableContent = (
         <>
             <div className="mb-4 flex flex-wrap gap-4 items-center text-sm text-gray-700">
@@ -433,13 +441,13 @@ export default function ExerciseManagementPage() {
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difficulty</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Video</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -459,14 +467,70 @@ export default function ExerciseManagementPage() {
                         </tr>
                     ) : (
                         exercises.map((ex, index) => (
-                            <tr key={ex._id}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{index + 1}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ex.title}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ex.category?.name || 'Unassigned'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ex.difficulty}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ex.duration ? `${ex.duration} min` : '-'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(ex.createdAt).toLocaleDateString()}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <tr key={ex._id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-gray-500">{(page - 1) * 10 + index + 1}</td>
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-gray-100 p-2 rounded-full flex-shrink-0">
+                                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                            </svg>
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-gray-900 truncate">{ex.title}</p>
+                                            {ex.description && (
+                                                <p className="text-sm text-gray-500 truncate max-w-[200px]">{ex.description}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${ex.category?.name
+                                            ? 'bg-blue-100 text-blue-800'
+                                            : 'bg-gray-100 text-gray-600'
+                                        }`}>
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                        {ex.category?.name || 'Unassigned'}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+                                        </svg>
+                                        {formatDuration(ex.duration)}
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                    {ex.image ? (
+                                        <img
+                                            src={ex.image}
+                                            alt={ex.title}
+                                            className="w-10 h-10 rounded-lg object-cover"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <FaImage className="w-4 h-4 text-gray-400" />
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                    {ex.video ? (
+                                        <div className="flex items-center gap-1 text-green-600">
+                                            <FaVideo className="w-4 h-4" />
+                                            <span className="text-sm">Available</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-sm text-gray-400">No video</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                                     <button
                                         onClick={() => handleEdit(ex)}
                                         className="text-secondary hover:text-blue-800 mr-3"
