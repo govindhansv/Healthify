@@ -44,7 +44,7 @@ router.post('/start', protect, async (req, res) => {
             }
 
             const program = await ExerciseBundle.findById(programId)
-                .populate('schedule.exercises.exercise', 'title slug image gif difficulty duration description equipment');
+                .populate('schedule.exercises.exercise', 'title slug image gif video difficulty duration description equipment');
 
             if (!program) {
                 return res.status(404).json({ success: false, message: 'Program not found' });
@@ -119,7 +119,7 @@ router.post('/start', protect, async (req, res) => {
         await session.save();
 
         // Populate exercises for response
-        await session.populate('exercises.exercise', 'title slug image gif difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image gif video difficulty duration description equipment');
 
         res.status(201).json({
             success: true,
@@ -143,7 +143,7 @@ router.get('/current', protect, async (req, res) => {
             user: req.user.id,
             status: { $in: ['in_progress', 'paused'] }
         })
-            .populate('exercises.exercise', 'title slug image gif difficulty duration description equipment')
+            .populate('exercises.exercise', 'title slug image gif video difficulty duration description equipment')
             .populate('program', 'name slug thumbnail');
 
         if (!session) {
@@ -179,7 +179,7 @@ router.get('/session/:id', protect, async (req, res) => {
             _id: req.params.id,
             user: req.user.id
         })
-            .populate('exercises.exercise', 'title slug image gif difficulty duration description equipment')
+            .populate('exercises.exercise', 'title slug image gif video difficulty duration description equipment')
             .populate('program', 'name slug thumbnail');
 
         if (!session) {
@@ -210,7 +210,7 @@ router.get('/session/:id/current-exercise', protect, async (req, res) => {
         const session = await WorkoutSession.findOne({
             _id: req.params.id,
             user: req.user.id
-        }).populate('exercises.exercise', 'title slug image gif difficulty duration description equipment');
+        }).populate('exercises.exercise', 'title slug image gif video difficulty duration description equipment');
 
         if (!session) {
             return res.status(404).json({ success: false, message: 'Session not found' });
@@ -312,7 +312,7 @@ router.post('/session/:id/complete-exercise', protect, async (req, res) => {
         session.updatedAt = new Date();
         await session.save();
 
-        await session.populate('exercises.exercise', 'title slug image difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         const isComplete = session.status === 'completed';
         const nextExercise = !isComplete ? session.exercises[session.currentExerciseIndex] : null;
@@ -376,7 +376,7 @@ router.post('/session/:id/skip-exercise', protect, async (req, res) => {
         session.updatedAt = new Date();
         await session.save();
 
-        await session.populate('exercises.exercise', 'title slug image difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         const isComplete = session.status === 'completed';
         const nextExercise = !isComplete ? session.exercises[session.currentExerciseIndex] : null;

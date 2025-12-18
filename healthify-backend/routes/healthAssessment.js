@@ -235,6 +235,164 @@ router.get('/my-progress', protect, async (req, res) => {
 });
 
 /**
+ * @desc    Get assessment results with scores and recommendations
+ * @route   GET /api/health-assessment/results
+ * @access  Private (User)
+ */
+router.get('/results', protect, async (req, res) => {
+    try {
+        const assessment = await HealthAssessment.findOne({ user: req.user.id });
+
+        if (!assessment || assessment.answers.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No assessment results found. Please complete the assessment first.'
+            });
+        }
+
+        // Get all questions to get their scoring weights
+        const questions = await HealthQuestion.find({ isActive: true });
+        const questionMap = {};
+        questions.forEach(q => {
+            questionMap[q._id.toString()] = q;
+        });
+
+        // Initialize category results
+        const categories = ['Body', 'Mind', 'Nutrition', 'Lifestyle'];
+        const categoryScores = {};
+        categories.forEach(cat => {
+            categoryScores[cat] = {
+                totalScore: 0,
+                maxScore: 0,
+                answeredCount: 0,
+                percentage: 0
+            };
+        });
+
+        // Calculate scores
+        assessment.answers.forEach(answer => {
+            const question = questionMap[answer.question.toString()];
+            if (question) {
+                const category = question.category;
+                const score = question.optionScores[answer.selectedOption] || 0;
+                const maxPossible = Math.max(...question.optionScores);
+
+                categoryScores[category].totalScore += score;
+                categoryScores[category].maxScore += maxPossible;
+                categoryScores[category].answeredCount += 1;
+            }
+        });
+
+        // Finalize category percentages
+        let totalWeightedScore = 0;
+        let totalMaxScore = 0;
+
+        categories.forEach(cat => {
+            const s = categoryScores[cat];
+            if (s.maxScore > 0) {
+                s.percentage = Math.round((s.totalScore / s.maxScore) * 100);
+                totalWeightedScore += s.totalScore;
+                totalMaxScore += s.maxScore;
+            }
+        });
+
+        const overallPercentage = totalMaxScore > 0 ? Math.round((totalWeightedScore / totalMaxScore) * 100) : 0;
+
+        // Determine level
+        let level = 'Needs Improvement';
+        if (overallPercentage >= 90) level = 'Excellent';
+        else if (overallPercentage >= 75) level = 'Good';
+        else if (overallPercentage >= 50) level = 'Fair';
+
+        // Generate Recommendations
+        const recommendations = [];
+
+        // 1. Low Category Recommendations
+        if (categoryScores['Mind'].percentage < 60) {
+            recommendations.push({
+                category: 'Mind',
+                priority: 'high',
+                title: 'Prioritize Mental Rest',
+                description: 'Your mind score suggests high stress or fatigue. Try incorporating 5-10 minutes of daily mindfulness.',
+                icon: 'psychology'
+            });
+        }
+        if (categoryScores['Body'].percentage < 60) {
+            recommendations.push({
+                category: 'Body',
+                priority: 'high',
+                title: 'Consistent Movement',
+                description: 'Increasing your daily step count or light mobility exercises can significantly improve your physical baseline.',
+                icon: 'fitness_center'
+            });
+        }
+
+        // 2. Specific Answer-based Recommendations
+        const answers = assessment.answers;
+
+        // Stress check
+        const stressQ = questions.find(q => q.questionText.includes('stress levels'));
+        if (stressQ) {
+            const stressAns = answers.find(a => a.question.toString() === stressQ._id.toString());
+            if (stressAns && stressAns.selectedOption >= 2) { // 'High' or 'Very High'
+                recommendations.push({
+                    category: 'Mind',
+                    priority: 'high',
+                    title: 'Stress Management',
+                    description: 'You indicated high stress. Consider our Guided Meditations to lower cortisol and improve focus.',
+                    icon: 'psychology'
+                });
+            }
+        }
+
+        // Sleep check
+        const sleepQ = questions.find(q => q.questionText.includes('hours of sleep'));
+        if (sleepQ) {
+            const sleepAns = answers.find(a => a.question.toString() === sleepQ._id.toString());
+            if (sleepAns && sleepAns.selectedOption === 0) { // 'Less than 5'
+                recommendations.push({
+                    category: 'Lifestyle',
+                    priority: 'high',
+                    title: 'Sleep Hygiene',
+                    description: 'Less than 5 hours of sleep is critical. Aim for a consistent bedtime and reduce blue light exposure.',
+                    icon: 'bedtime'
+                });
+            }
+        }
+
+        // Add a general "keep it up" if everything is good
+        if (recommendations.length === 0) {
+            recommendations.push({
+                category: 'General',
+                priority: 'low',
+                title: 'Maintain Consistency',
+                description: 'Your habits are looking great! Keep following your current routine.',
+                icon: 'lightbulb_outline'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: {
+                overallScore: {
+                    score: totalWeightedScore,
+                    maxScore: totalMaxScore,
+                    percentage: overallPercentage,
+                    level: level
+                },
+                categoryScores: categoryScores,
+                recommendations: recommendations,
+                completedAt: assessment.completedAt,
+                totalQuestionsAnswered: assessment.answers.length
+            }
+        });
+    } catch (error) {
+        console.error('Get assessment results error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+/**
  * @desc    Submit an answer
  * @route   POST /api/health-assessment/answer
  * @access  Private (User)

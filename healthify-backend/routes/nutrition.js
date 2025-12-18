@@ -37,10 +37,35 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/nutrition/recipe-of-the-day
+router.get('/recipe-of-the-day', async (req, res) => {
+  try {
+    const count = await Nutrition.countDocuments({ type: 'Recipe' });
+    if (count === 0) return res.status(404).json({ message: 'No recipes found' });
+
+    const random = Math.floor(Math.random() * count);
+    const item = await Nutrition.findOne({ type: 'Recipe' }).skip(random);
+
+    res.json(item);
+  } catch (err) {
+    console.error('Recipe of the day error:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // GET /api/nutrition/:id
 router.get('/:id', async (req, res) => {
   try {
-    const item = await Nutrition.findById(req.params.id);
+    const { id } = req.params;
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+
+    let item;
+    if (isObjectId) {
+      item = await Nutrition.findById(id);
+    } else {
+      item = await Nutrition.findOne({ slug: id });
+    }
+
     if (!item) return res.status(404).json({ message: 'Nutrition item not found' });
     res.json(item);
   } catch (err) {
@@ -49,10 +74,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+
 // POST /api/nutrition (admin)
 router.post('/', protect, isAdmin, async (req, res) => {
   try {
-    const { title, description, type, image, calories, ingredients, instructions } = req.body || {};
+    const { title, description, type, image, calories, prepTime, ingredients, instructions } = req.body || {};
     if (!title) return res.status(400).json({ message: 'Title required' });
 
     const exists = await Nutrition.findOne({ title: title.trim() });
@@ -64,11 +90,13 @@ router.post('/', protect, isAdmin, async (req, res) => {
       type: type || 'Recipe',
       image: image || '',
       calories: typeof calories === 'number' ? calories : Number(calories) || 0,
+      prepTime: typeof prepTime === 'number' ? prepTime : Number(prepTime) || 0,
       ingredients: Array.isArray(ingredients)
         ? ingredients
         : (ingredients ? [ingredients] : []),
       instructions: instructions || ''
     });
+
 
     await item.save();
     res.status(201).json({ message: 'Nutrition item created', nutrition: item });
@@ -82,7 +110,12 @@ router.post('/', protect, isAdmin, async (req, res) => {
 // PUT /api/nutrition/:id (admin)
 router.put('/:id', protect, isAdmin, async (req, res) => {
   try {
-    const { title, description, type, image, calories, ingredients, instructions } = req.body || {};
+    const { title, description, type, image, calories, prepTime, ingredients, instructions } = req.body || {};
+
+    if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+
     const item = await Nutrition.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Nutrition item not found' });
 
@@ -91,6 +124,7 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
     if (type !== undefined) item.type = type;
     if (image !== undefined) item.image = image;
     if (calories !== undefined) item.calories = typeof calories === 'number' ? calories : Number(calories) || 0;
+    if (prepTime !== undefined) item.prepTime = typeof prepTime === 'number' ? prepTime : Number(prepTime) || 0;
     if (ingredients !== undefined) {
       item.ingredients = Array.isArray(ingredients)
         ? ingredients
@@ -110,6 +144,9 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
 // DELETE /api/nutrition/:id (admin)
 router.delete('/:id', protect, isAdmin, async (req, res) => {
   try {
+    if (!/^[0-9a-fA-F]{24}$/.test(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
     const item = await Nutrition.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ message: 'Nutrition item not found' });
     res.json({ message: 'Nutrition item deleted' });
