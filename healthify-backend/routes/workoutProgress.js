@@ -104,7 +104,7 @@ router.post('/start', protect, async (req, res) => {
             }
 
             const program = await ExerciseBundle.findById(programId)
-                .populate('schedule.exercises.exercise', 'title slug image gif difficulty duration description equipment');
+                .populate('schedule.exercises.exercise', 'title slug image video difficulty duration description equipment');
 
             if (!program) {
                 return res.status(404).json({ success: false, message: 'Program not found' });
@@ -124,18 +124,22 @@ router.post('/start', protect, async (req, res) => {
             sessionData.programDayTitle = dayData.title || `Day ${day}`;
             title = `${program.name} - ${dayData.title || `Day ${day}`}`;
 
-            // Map exercises with order
-            exercises = dayData.exercises.map((ex, index) => ({
-                exercise: ex.exercise._id,
-                targetReps: ex.reps,
-                targetSets: ex.sets,
-                completedReps: 0,
-                completedSets: 0,
-                duration: 0,
-                restTime: 0,
-                status: 'pending',
-                order: index
-            }));
+            // Map exercises with order - filter out null/deleted exercises
+            exercises = dayData.exercises
+                .filter(ex => ex.exercise != null)
+                .map((ex, index) => ({
+                    exercise: ex.exercise._id,
+                    targetReps: ex.reps,
+                    targetSets: ex.sets,
+                    completedReps: 0,
+                    completedSets: 0,
+                    duration: 0,
+                    restTime: 0,
+                    status: 'pending',
+                    order: index
+                }));
+
+            console.log(`Day ${day} exercises: ${dayData.exercises.length}, valid: ${exercises.length}`);
         }
         // TODO: Support standalone workout
 
@@ -171,7 +175,7 @@ router.post('/start', protect, async (req, res) => {
         await session.save();
 
         // Populate exercises for response
-        await session.populate('exercises.exercise', 'title slug image gif difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         res.status(201).json({
             success: true,
@@ -191,12 +195,18 @@ router.post('/start', protect, async (req, res) => {
  */
 router.get('/current', protect, async (req, res) => {
     try {
+        console.log('=== GET /current Debug ===');
+        console.log('req.user:', JSON.stringify(req.user, null, 2));
+        console.log('req.user.id:', req.user?.id);
+
         const session = await WorkoutSession.findOne({
             user: req.user.id,
             status: { $in: ['in_progress', 'paused'] }
         })
-            .populate('exercises.exercise', 'title slug image gif difficulty duration description equipment')
+            .populate('exercises.exercise', 'title slug image video difficulty duration description equipment')
             .populate('program', 'name slug thumbnail');
+
+        console.log('Session found:', session ? 'Yes' : 'No');
 
         if (!session) {
             return res.status(200).json({
@@ -212,6 +222,7 @@ router.get('/current', protect, async (req, res) => {
         });
     } catch (error) {
         console.error('Get current session error:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
@@ -231,7 +242,7 @@ router.get('/session/:id', protect, async (req, res) => {
             _id: req.params.id,
             user: req.user.id
         })
-            .populate('exercises.exercise', 'title slug image gif difficulty duration description equipment')
+            .populate('exercises.exercise', 'title slug image video difficulty duration description equipment')
             .populate('program', 'name slug thumbnail');
 
         if (!session) {
@@ -262,7 +273,7 @@ router.get('/session/:id/current-exercise', protect, async (req, res) => {
         const session = await WorkoutSession.findOne({
             _id: req.params.id,
             user: req.user.id
-        }).populate('exercises.exercise', 'title slug image gif difficulty duration description equipment');
+        }).populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         if (!session) {
             return res.status(404).json({ success: false, message: 'Session not found' });
@@ -364,7 +375,7 @@ router.post('/session/:id/complete-exercise', protect, async (req, res) => {
         session.updatedAt = new Date();
         await session.save();
 
-        await session.populate('exercises.exercise', 'title slug image difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         const isComplete = session.status === 'completed';
         const nextExercise = !isComplete ? session.exercises[session.currentExerciseIndex] : null;
@@ -428,7 +439,7 @@ router.post('/session/:id/skip-exercise', protect, async (req, res) => {
         session.updatedAt = new Date();
         await session.save();
 
-        await session.populate('exercises.exercise', 'title slug image difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         const isComplete = session.status === 'completed';
         const nextExercise = !isComplete ? session.exercises[session.currentExerciseIndex] : null;
@@ -1152,13 +1163,13 @@ router.post('/quick-start', protect, async (req, res) => {
                 { title: { $regex: keywords.join('|'), $options: 'i' } },
                 { description: { $regex: keywords.join('|'), $options: 'i' } }
             ]
-        }).limit(8).select('_id title slug image gif difficulty duration description equipment');
+        }).limit(8).select('_id title slug image video difficulty duration description equipment');
 
         // If no matching exercises, get random exercises
         if (exercises.length < 4) {
             exercises = await Exercise.aggregate([
                 { $sample: { size: 6 } },
-                { $project: { _id: 1, title: 1, slug: 1, image: 1, gif: 1, difficulty: 1, duration: 1, description: 1, equipment: 1 } }
+                { $project: { _id: 1, title: 1, slug: 1, image: 1, video: 1, difficulty: 1, duration: 1, description: 1, equipment: 1 } }
             ]);
         }
 
@@ -1219,7 +1230,7 @@ router.post('/quick-start', protect, async (req, res) => {
         const session = new WorkoutSession(sessionData);
         await session.save();
 
-        await session.populate('exercises.exercise', 'title slug image gif difficulty duration description equipment');
+        await session.populate('exercises.exercise', 'title slug image video difficulty duration description equipment');
 
         res.status(201).json({
             success: true,
